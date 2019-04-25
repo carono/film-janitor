@@ -1,0 +1,50 @@
+{
+  "name": "carono/film-janitor",
+  "description": "",
+  "type": "library",
+  "keywords": [
+    "yandex",
+    "xml",
+    "films"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "homepage": "http://carono.ru",
+      "name": "Aleksandr Kasyanov",
+      "email": "info@carono.ru"
+    }
+  ],
+  "require": {
+    "ext-json": "*",
+    "ext-simplexml": "*",
+    "anton-shevchuk/yandex-xml-library": "^1.1",
+    "cocur/slugify": "^3.1",
+    "electrolinux/phpquery": "^0.9.6",
+    "guzzlehttp/guzzle": "^6.3",
+    "splitbrain/php-cli": "^1.1",
+    "vlucas/phpdotenv": "^3.3",
+    "yiisoft/yii2": "^2.0"
+  },
+  "config": {
+    "sort-packages": true,
+    "process-timeout": 1800,
+    "fxp-asset": {
+      "enabled": false
+    }
+  },
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://asset-packagist.org"
+    }
+  ],
+  "bin": [
+    "bin/janitor.bat"
+  ],
+  "autoload": {
+    "psr-4": {
+      "carono\\janitor\\": "src"
+    }
+  }
+}
