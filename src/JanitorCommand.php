@@ -2,8 +2,10 @@
 
 namespace carono\janitor;
 
+use carono\janitor\helpers\FileHelper;
 use splitbrain\phpcli\CLI;
 use splitbrain\phpcli\Options;
+use carono\janitor\helpers\Console;
 
 class JanitorCommand extends CLI
 {
@@ -22,7 +24,7 @@ class JanitorCommand extends CLI
             if (!dir($realPath)) {
                 die("Dir $dir not found\n");
             }
-            if (\carono\janitor\Console::confirm('Refactor ' . realpath($dir) . '?')) {
+            if (Console::confirm('Refactor ' . realpath($dir) . '?')) {
                 \carono\janitor\Cli::reform($dir);
             }
             exit;
@@ -33,7 +35,7 @@ class JanitorCommand extends CLI
             $prefix = '';
             $videoDir = $appDir . DIRECTORY_SEPARATOR . 'video';
             $files = explode("\n", trim(file_get_contents($appDir . DIRECTORY_SEPARATOR . 'fixture.txt')));
-            \yii\helpers\FileHelper::removeDirectory($videoDir);
+            FileHelper::removeDirectory($videoDir);
             if (!mkdir($videoDir) && !is_dir($videoDir)) {
                 throw new \RuntimeException(sprintf('Directory "%s" was not created', 'video'));
             }
@@ -54,10 +56,10 @@ class JanitorCommand extends CLI
 
         if ($options->getCmd() === 'clear-cache') {
             if (file_exists(\carono\janitor\Cli::$cacheFile)) {
-                \yii\helpers\FileHelper::unlink(\carono\janitor\Cli::$cacheFile);
+                FileHelper::unlink(\carono\janitor\Cli::$cacheFile);
             }
             if (file_exists(\carono\janitor\Cli::$renamedFile)) {
-                \yii\helpers\FileHelper::unlink(\carono\janitor\Cli::$renamedFile);
+                FileHelper::unlink(\carono\janitor\Cli::$renamedFile);
             }
             echo "Clearing\n";
             exit;

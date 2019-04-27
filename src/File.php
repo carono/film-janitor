@@ -2,7 +2,7 @@
 
 namespace carono\janitor;
 
-use yii\helpers\ArrayHelper;
+use carono\janitor\helpers\ArrayHelper;
 
 /**
  * Class File
@@ -55,7 +55,7 @@ class File
     public function storeSerialName()
     {
         $title = $this->reformedName;
-        if (!$this->getStoredSerialName()) {
+        if ($this->isSerial() && !$this->getStoredSerialName()) {
             $serials = $this->getStoredSerials();
             $serials[$this->getParentFolder()] = ['title' => $title, 'suffix' => $this->suffix];
             file_put_contents(Cli::$cacheFile, json_encode($serials));

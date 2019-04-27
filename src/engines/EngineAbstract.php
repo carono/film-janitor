@@ -5,7 +5,7 @@ namespace carono\janitor\engines;
 
 
 use carono\janitor\Cli;
-use yii\helpers\FileHelper;
+use carono\janitor\helpers\FileHelper;
 
 abstract class EngineAbstract implements EngineInterface
 {
@@ -41,5 +41,10 @@ abstract class EngineAbstract implements EngineInterface
             return (string)file_get_contents($file);
         }
         return '';
+    }
+
+    public function clearCache()
+    {
+        FileHelper::removeDirectory(static::getTemporaryDir());
     }
 }

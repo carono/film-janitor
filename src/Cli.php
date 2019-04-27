@@ -3,6 +3,8 @@
 namespace carono\janitor;
 
 use carono\janitor\engines\EngineInterface;
+use carono\janitor\helpers\Console;
+use carono\janitor\helpers\FileHelper;
 
 /**
  * Class Cli
@@ -52,15 +54,17 @@ class Cli
             }
 
             echo "\n";
-            echo 'Type: ' . ($file->isFilm() ? 'film ' : 'serial, season ' . $file->getSeasonNumber() . ' ep' . $file->getEpisodeNumber()) . "\n";
-            foreach ($file->formFilmNames($customName) as $i => $name) {
-                echo '[' . ($i === $file->indexName && !$file->getStoredSerialName() ? 'X' : ' ') . '] ' . $name . "\n";
-            }
-            echo $fileName . ' => ' . $realFileName . ': ';
 
             if (!$renameAll || !$file->getStoredSerialName()) {
                 $renameAll = false;
+                echo 'Type: ' . ($file->isFilm() ? 'film ' : 'serial, season ' . $file->getSeasonNumber() . ' ep' . $file->getEpisodeNumber()) . "\n";
+                foreach ($file->formFilmNames($customName) as $i => $name) {
+                    echo '[' . ($i === $file->indexName && !$file->getStoredSerialName() ? 'X' : ' ') . '] ' . $name . "\n";
+                }
+                echo $fileName . ' => ' . $realFileName . ': ';
                 $value = Console::select('What do?', $options);
+            } else {
+                echo $fileName . ' => ' . $realFileName . ": Renamed\n";
             }
 
             if ($value === 'i') {
@@ -136,7 +140,7 @@ class Cli
      */
     protected static function getFiles($dir)
     {
-        return \yii\helpers\FileHelper::findFiles($dir);
+        return FileHelper::findFiles($dir);
     }
 
     /**

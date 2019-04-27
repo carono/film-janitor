@@ -5,7 +5,7 @@ namespace carono\janitor\engines;
 use AntonShevchuk\YandexXml\YandexXmlClient;
 use Exception;
 use SimpleXMLElement;
-use yii\helpers\FileHelper;
+use carono\janitor\helpers\FileHelper;
 
 /**
  * Class Yandex
@@ -96,10 +96,5 @@ class YandexXmlEngine extends EngineAbstract
         $titles = array_unique($titles);
         sort($titles);
         return $titles;
-    }
-
-    public function clearCache()
-    {
-        FileHelper::removeDirectory(static::$tmpDir);
     }
 }

@@ -17,14 +17,13 @@
   ],
   "require": {
     "ext-json": "*",
+    "ext-mbstring": "*",
     "ext-simplexml": "*",
     "anton-shevchuk/yandex-xml-library": "^1.1",
     "cocur/slugify": "^3.1",
-    "electrolinux/phpquery": "^0.9.6",
     "guzzlehttp/guzzle": "^6.3",
     "splitbrain/php-cli": "^1.1",
-    "vlucas/phpdotenv": "^3.3",
-    "yiisoft/yii2": "^2.0"
+    "vlucas/phpdotenv": "^3.3"
   },
   "config": {
     "sort-packages": true,
