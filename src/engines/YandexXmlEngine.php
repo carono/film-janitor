@@ -19,7 +19,7 @@ class YandexXmlEngine extends EngineAbstract
      */
     protected static function formRequest($name)
     {
-        return $name . ' ' . getenv('XML_YANDEX_REQUEST');
+        return urlencode($name . ' ' . getenv('XML_YANDEX_REQUEST'));
     }
 
     /**
