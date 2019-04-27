@@ -13,4 +13,4 @@
 ### Запуск
 > janitor -d "d:\folder_with_films"
 
-![](https://raw.github.com/carono/film-janitor/HEAD/screencast.gif)
+![](https://raw.githubusercontent.com/carono/film-janitor/master/screencast.gif)
