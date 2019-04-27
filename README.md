@@ -2,10 +2,12 @@
 Переименовывает файлы с фильмами и сериалами с помощью поиска в интернете
 
 ### Установка
-composer global require carono/film-janitor
-Скопируйте файл .env.example в .env  
-Замените XML_YANDEX_LOGIN и XML_YANDEX_TOKEN на свои данные в Яндекс XML
+Установите пакет глобально, 
 
+>composer global require carono/film-janitor
+
+Установите настройки поискового движка (Yandex XML по умолчанию)
+> janitor set-engine-options
 
 ### Запуск
-janitor -d "folder_with_films"
+> janitor -d "d:\folder_with_films"

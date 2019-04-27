@@ -96,7 +96,7 @@ class JanitorCommand extends CLI
         echo "Clearing\n";
     }
 
-    public function cmdSetOptions()
+    public function cmdSetEngineOptions()
     {
         foreach (JanitorCli::getEngine()->getRequiredEnvironmentOptions() as $option => $description) {
             $value = getenv($option);

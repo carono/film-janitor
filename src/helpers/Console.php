@@ -180,8 +180,12 @@ class Console
      */
     public static function clearScreen()
     {
-        for ($i = 0; $i < 50; $i++) {
-            echo "\n\r";
+        if (static::isRunningOnWindows()) {
+            for ($i = 0; $i < 50; $i++) {
+                echo "\n\r";
+            }
+        } else {
+            echo "\033[2J";
         }
     }
 
