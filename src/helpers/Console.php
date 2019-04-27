@@ -40,93 +40,102 @@ class Console
     /**
      * Moves the terminal cursor up by sending ANSI control code CUU to the terminal.
      * If the cursor is already at the edge of the screen, this has no effect.
+     *
      * @param int $rows number of rows the cursor should be moved up
      */
     public static function moveCursorUp($rows = 1)
     {
-        echo "\033[" . (int) $rows . 'A';
+        echo "\033[" . (int)$rows . 'A';
     }
 
     /**
      * Moves the terminal cursor down by sending ANSI control code CUD to the terminal.
      * If the cursor is already at the edge of the screen, this has no effect.
+     *
      * @param int $rows number of rows the cursor should be moved down
      */
     public static function moveCursorDown($rows = 1)
     {
-        echo "\033[" . (int) $rows . 'B';
+        echo "\033[" . (int)$rows . 'B';
     }
 
     /**
      * Moves the terminal cursor forward by sending ANSI control code CUF to the terminal.
      * If the cursor is already at the edge of the screen, this has no effect.
+     *
      * @param int $steps number of steps the cursor should be moved forward
      */
     public static function moveCursorForward($steps = 1)
     {
-        echo "\033[" . (int) $steps . 'C';
+        echo "\033[" . (int)$steps . 'C';
     }
 
     /**
      * Moves the terminal cursor backward by sending ANSI control code CUB to the terminal.
      * If the cursor is already at the edge of the screen, this has no effect.
+     *
      * @param int $steps number of steps the cursor should be moved backward
      */
     public static function moveCursorBackward($steps = 1)
     {
-        echo "\033[" . (int) $steps . 'D';
+        echo "\033[" . (int)$steps . 'D';
     }
 
     /**
      * Moves the terminal cursor to the beginning of the next line by sending ANSI control code CNL to the terminal.
+     *
      * @param int $lines number of lines the cursor should be moved down
      */
     public static function moveCursorNextLine($lines = 1)
     {
-        echo "\033[" . (int) $lines . 'E';
+        echo "\033[" . (int)$lines . 'E';
     }
 
     /**
      * Moves the terminal cursor to the beginning of the previous line by sending ANSI control code CPL to the terminal.
+     *
      * @param int $lines number of lines the cursor should be moved up
      */
     public static function moveCursorPrevLine($lines = 1)
     {
-        echo "\033[" . (int) $lines . 'F';
+        echo "\033[" . (int)$lines . 'F';
     }
 
     /**
      * Moves the cursor to an absolute position given as column and row by sending ANSI control code CUP or CHA to the terminal.
+     *
      * @param int $column 1-based column number, 1 is the left edge of the screen.
      * @param int|null $row 1-based row number, 1 is the top edge of the screen. if not set, will move cursor only in current line.
      */
     public static function moveCursorTo($column, $row = null)
     {
         if ($row === null) {
-            echo "\033[" . (int) $column . 'G';
+            echo "\033[" . (int)$column . 'G';
         } else {
-            echo "\033[" . (int) $row . ';' . (int) $column . 'H';
+            echo "\033[" . (int)$row . ';' . (int)$column . 'H';
         }
     }
 
     /**
      * Scrolls whole page up by sending ANSI control code SU to the terminal.
      * New lines are added at the bottom. This is not supported by ANSI.SYS used in windows.
+     *
      * @param int $lines number of lines to scroll up
      */
     public static function scrollUp($lines = 1)
     {
-        echo "\033[" . (int) $lines . 'S';
+        echo "\033[" . (int)$lines . 'S';
     }
 
     /**
      * Scrolls whole page down by sending ANSI control code SD to the terminal.
      * New lines are added at the top. This is not supported by ANSI.SYS used in windows.
+     *
      * @param int $lines number of lines to scroll down
      */
     public static function scrollDown($lines = 1)
     {
-        echo "\033[" . (int) $lines . 'T';
+        echo "\033[" . (int)$lines . 'T';
     }
 
     /**
@@ -171,7 +180,9 @@ class Console
      */
     public static function clearScreen()
     {
-        echo "\033[2J";
+        for ($i = 0; $i < 50; $i++) {
+            echo "\n\r";
+        }
     }
 
     /**
@@ -319,6 +330,7 @@ class Console
 
     /**
      * Returns the length of the string without ANSI color codes.
+     *
      * @param string $string the string to measure
      * @return int the length of the string not counting ANSI format characters
      */
@@ -450,6 +462,7 @@ class Console
 
     /**
      * Returns true if the console is running on windows.
+     *
      * @return bool
      */
     public static function isRunningOnWindows()
@@ -482,7 +495,7 @@ class Console
             $output = [];
             exec('mode con', $output);
             if (isset($output[1]) && strpos($output[1], 'CON') !== false) {
-                return $size = [(int) preg_replace('~\D~', '', $output[4]), (int) preg_replace('~\D~', '', $output[3])];
+                return $size = [(int)preg_replace('~\D~', '', $output[4]), (int)preg_replace('~\D~', '', $output[3])];
             }
         } else {
             // try stty if available
@@ -492,22 +505,22 @@ class Console
 
                 // Linux stty output
                 if (preg_match('/rows\s+(\d+);\s*columns\s+(\d+);/mi', $stty, $matches)) {
-                    return $size = [(int) $matches[2], (int) $matches[1]];
+                    return $size = [(int)$matches[2], (int)$matches[1]];
                 }
 
                 // MacOS stty output
                 if (preg_match('/(\d+)\s+rows;\s*(\d+)\s+columns;/mi', $stty, $matches)) {
-                    return $size = [(int) $matches[2], (int) $matches[1]];
+                    return $size = [(int)$matches[2], (int)$matches[1]];
                 }
             }
 
             // fallback to tput, which may not be updated on terminal resize
-            if (($width = (int) exec('tput cols 2>&1')) > 0 && ($height = (int) exec('tput lines 2>&1')) > 0) {
+            if (($width = (int)exec('tput cols 2>&1')) > 0 && ($height = (int)exec('tput lines 2>&1')) > 0) {
                 return $size = [$width, $height];
             }
 
             // fallback to ENV variables, which may not be updated on terminal resize
-            if (($width = (int) getenv('COLUMNS')) > 0 && ($height = (int) getenv('LINES')) > 0) {
+            if (($width = (int)getenv('COLUMNS')) > 0 && ($height = (int)getenv('LINES')) > 0) {
                 return $size = [$width, $height];
             }
         }
@@ -856,6 +869,7 @@ class Console
 
     /**
      * Return width of the progressbar
+     *
      * @param string $prefix an optional string to display before the progress bar.
      * @see updateProgress
      * @return int screen width
@@ -887,6 +901,7 @@ class Console
 
     /**
      * Calculate $_progressEta, $_progressEtaLastUpdate and $_progressEtaLastDone
+     *
      * @param int $done the number of items that are completed.
      * @param int $total the total value of items that are to be done.
      * @see updateProgress

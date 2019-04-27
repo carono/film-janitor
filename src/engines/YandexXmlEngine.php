@@ -5,7 +5,6 @@ namespace carono\janitor\engines;
 use AntonShevchuk\YandexXml\YandexXmlClient;
 use Exception;
 use SimpleXMLElement;
-use carono\janitor\helpers\FileHelper;
 
 /**
  * Class Yandex
@@ -14,17 +13,6 @@ use carono\janitor\helpers\FileHelper;
  */
 class YandexXmlEngine extends EngineAbstract
 {
-
-    public function __construct()
-    {
-        if (!getenv('XML_YANDEX_LOGIN')) {
-            die('Set XML_YANDEX_LOGIN in .env');
-        }
-        if (!getenv('XML_YANDEX_TOKEN')) {
-            die('Set XML_YANDEX_TOKEN in .env');
-        }
-    }
-
     /**
      * @param $name
      * @return string
@@ -47,6 +35,13 @@ class YandexXmlEngine extends EngineAbstract
         return $xml;
     }
 
+    public static function getClient()
+    {
+        $login = getenv('XML_YANDEX_LOGIN');
+        $token = getenv('XML_YANDEX_TOKEN');
+        return new YandexXmlClient($login, $token);
+    }
+
 
     /**
      * @param $request
@@ -55,12 +50,11 @@ class YandexXmlEngine extends EngineAbstract
     public static function search($request)
     {
         $request = static::formRequest($request);
-        $login = getenv('XML_YANDEX_LOGIN');
-        $token = getenv('XML_YANDEX_TOKEN');
+
         $lr = getenv('XML_YANDEX_LR') ?: 2;
         $limit = getenv('XML_YANDEX_LIMIT') ?: 10;
 
-        $client = new YandexXmlClient($login, $token);
+        $client = self::getClient();
         if (!$data = static::getCache($request)) {
             try {
                 $xml = $client->query($request)->lr($lr)->limit($limit)->request()->response;
@@ -96,5 +90,20 @@ class YandexXmlEngine extends EngineAbstract
         $titles = array_unique($titles);
         sort($titles);
         return $titles;
+    }
+
+    public function getRequiredEnvironmentOptions()
+    {
+        return [
+            'XML_YANDEX_LOGIN' => 'Set login Yandex.xml',
+            'XML_YANDEX_TOKEN' => 'Set token Yandex.xml'
+        ];
+    }
+
+    /**
+     * @return bool
+     */
+    public function validateEnvironmentOptions()
+    {
     }
 }

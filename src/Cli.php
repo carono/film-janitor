@@ -33,9 +33,11 @@ class Cli
             return new File($path);
         }, $files);
         while ($file = array_shift($fileModels)) {
+            Console::clearScreen();
+
             $value = null;
             $file->customName = $customName;
-            $realFileName = $file->getReformedFileName();
+            $reformedFileName = $file->getReformedFileName();
             $fileName = $file->getFileName();
 
             if ($file->wasRenamed()) {
@@ -57,14 +59,23 @@ class Cli
 
             if (!$renameAll || !$file->getStoredSerialName()) {
                 $renameAll = false;
-                echo 'Type: ' . ($file->isFilm() ? 'film ' : 'serial, season ' . $file->getSeasonNumber() . ' ep' . $file->getEpisodeNumber()) . "\n";
+                echo 'File type: ';
+                if ($file->isFilm()) {
+                    echo 'Movie';
+                } else {
+                    echo 'Serial, Season ' . $file->getSeasonNumber() . ' Episode ' . $file->getEpisodeNumber();
+                }
+                echo "\n";
                 foreach ($file->formFilmNames($customName) as $i => $name) {
                     echo '[' . ($i === $file->indexName && !$file->getStoredSerialName() ? 'X' : ' ') . '] ' . $name . "\n";
                 }
-                echo $fileName . ' => ' . $realFileName . ': ';
+                echo "\n";
+                echo "Original file: $fileName\n";
+                echo "New file name: $reformedFileName\n";
+                echo "\n";
                 $value = Console::select('What do?', $options);
             } else {
-                echo $fileName . ' => ' . $realFileName . ": Renamed\n";
+                echo $fileName . ' => ' . $reformedFileName . ": Renamed\n";
             }
 
             if ($value === 'i') {
