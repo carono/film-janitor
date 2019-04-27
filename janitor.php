@@ -30,9 +30,4 @@ if (!defined('COMPOSER_INSTALL')) {
 
 require COMPOSER_INSTALL;
 
-
-$dotenv = Dotenv\Dotenv::create(__DIR__);
-$dotenv->load();
-$dotenv->required(['SEARCH_ENGINE']);
-
 (new JanitorCommand())->run();

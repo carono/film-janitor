@@ -33,8 +33,6 @@ class Cli
             return new File($path);
         }, $files);
         while ($file = array_shift($fileModels)) {
-            Console::clearScreen();
-
             $value = null;
             $file->customName = $customName;
             $reformedFileName = $file->getReformedFileName();
@@ -55,9 +53,8 @@ class Cli
                 $options['a'] = 'All rename for serial';
             }
 
-            echo "\n";
-
             if (!$renameAll || !$file->getStoredSerialName()) {
+                Console::clearScreen();
                 $renameAll = false;
                 echo 'File type: ';
                 if ($file->isFilm()) {

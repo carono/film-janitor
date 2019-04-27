@@ -6,6 +6,7 @@ use carono\janitor\Cli as JanitorCli;
 use carono\janitor\helpers\Console;
 use carono\janitor\helpers\FileHelper;
 use carono\janitor\helpers\Inflector;
+use Dotenv\Dotenv;
 use splitbrain\phpcli\CLI;
 use splitbrain\phpcli\Options;
 
@@ -16,6 +17,20 @@ class JanitorCommand extends CLI
     const CMD_SET_ENGINE_OPTIONS = 'set-engine-options';
     const CMD_SET_OPTION = 'set-option';
     const CMD_RESET_ENV = 'reset-env';
+
+    protected static $env = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '.env';
+
+    public function __construct($autocatch = true)
+    {
+        parent::__construct($autocatch);
+
+        if (!file_exists(static::$env)) {
+            $this->cmdResetEnv(new Options);
+        }
+        $dotenv = Dotenv::create(dirname(static::$env));
+        $dotenv->load();
+        $dotenv->required(['SEARCH_ENGINE']);
+    }
 
     protected function setup(Options $options)
     {
@@ -30,8 +45,8 @@ class JanitorCommand extends CLI
 
     protected function setEnvOption($option, $value)
     {
-        $env = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '.env';
         $value = addcslashes($value, '"\\');
+        $env = static::$env;
         $envContent = file_get_contents($env);
         $option = preg_quote($option, '/');
         $data = $option . '="' . $value . '"';
@@ -61,7 +76,10 @@ class JanitorCommand extends CLI
         }
     }
 
-    public function cmdFixture()
+    /**
+     * @param Options $options
+     */
+    public function cmdFixture(Options $options)
     {
         $appDir = dirname(__DIR__);
         $prefix = '';
@@ -85,7 +103,10 @@ class JanitorCommand extends CLI
         }
     }
 
-    public function cmdClearCache()
+    /**
+     * @param Options $options
+     */
+    public function cmdClearCache(Options $options)
     {
         if (file_exists(\carono\janitor\Cli::$cacheFile)) {
             FileHelper::unlink(\carono\janitor\Cli::$cacheFile);
@@ -96,7 +117,10 @@ class JanitorCommand extends CLI
         echo "Clearing\n";
     }
 
-    public function cmdSetEngineOptions()
+    /**
+     * @param Options $options
+     */
+    public function cmdSetEngineOptions(Options $options)
     {
         foreach (JanitorCli::getEngine()->getRequiredEnvironmentOptions() as $option => $description) {
             $value = getenv($option);
@@ -105,15 +129,20 @@ class JanitorCommand extends CLI
         }
     }
 
-    public function cmdResetEnv()
+    /**
+     * @param Options $options
+     */
+    public function cmdResetEnv(Options $options)
     {
         if (Console::confirm('Reset env to default')) {
-            $env = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '.env';
-            copy($env . '.example', $env);
+            copy(static::$env . '.example', static::$env);
             Console::output('Env reverted to default');
         }
     }
 
+    /**
+     * @param Options $options
+     */
     protected function main(Options $options)
     {
         if ($dir = $options->getOpt('directory')) {
