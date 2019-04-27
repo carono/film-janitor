@@ -20,6 +20,14 @@ class JanitorCommand extends CLI
 
     protected static $env = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '.env';
 
+    protected static function refreshEnv()
+    {
+        $dotenv = Dotenv::create(dirname(static::$env));
+        $dotenv->overload();
+        $dotenv->required(['SEARCH_ENGINE']);
+        unset($dotenv);
+    }
+
     public function __construct($autocatch = true)
     {
         parent::__construct($autocatch);
@@ -27,9 +35,7 @@ class JanitorCommand extends CLI
         if (!file_exists(static::$env)) {
             $this->cmdResetEnv(new Options);
         }
-        $dotenv = Dotenv::create(dirname(static::$env));
-        $dotenv->load();
-        $dotenv->required(['SEARCH_ENGINE']);
+        static::refreshEnv();
     }
 
     protected function setup(Options $options)
@@ -57,6 +63,7 @@ class JanitorCommand extends CLI
         } else {
             file_put_contents($env, $newEnvContent);
         }
+        static::refreshEnv();
     }
 
     public function cmdRefactoring($dir)
@@ -137,6 +144,7 @@ class JanitorCommand extends CLI
         if (Console::confirm('Reset env to default')) {
             copy(static::$env . '.example', static::$env);
             Console::output('Env reverted to default');
+            static::refreshEnv();
         }
     }
 
