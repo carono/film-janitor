@@ -18,11 +18,14 @@ class JanitorCommand extends CLI
     const CMD_SET_OPTION = 'set-option';
     const CMD_RESET_ENV = 'reset-env';
 
-    protected static $env = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '.env';
+    protected static function getEnvFile()
+    {
+        return $_SERVER['APPDATA'] . DIRECTORY_SEPARATOR . 'film-janitor' . DIRECTORY_SEPARATOR . '.env';
+    }
 
     protected static function refreshEnv()
     {
-        $dotenv = Dotenv::create(dirname(static::$env));
+        $dotenv = Dotenv::create(dirname(static::getEnvFile()));
         $dotenv->overload();
         $dotenv->required(['SEARCH_ENGINE']);
         unset($dotenv);
@@ -32,7 +35,7 @@ class JanitorCommand extends CLI
     {
         parent::__construct($autocatch);
 
-        if (!file_exists(static::$env)) {
+        if (!file_exists(static::getEnvFile())) {
             $this->cmdResetEnv(new Options);
         }
         static::refreshEnv();
@@ -52,7 +55,7 @@ class JanitorCommand extends CLI
     protected function setEnvOption($option, $value)
     {
         $value = addcslashes($value, '"\\');
-        $env = static::$env;
+        $env = static::getEnvFile();
         $envContent = file_get_contents($env);
         $option = preg_quote($option, '/');
         $data = $option . '="' . $value . '"';
@@ -115,12 +118,7 @@ class JanitorCommand extends CLI
      */
     public function cmdClearCache(Options $options)
     {
-        if (file_exists(\carono\janitor\Cli::$cacheFile)) {
-            FileHelper::unlink(\carono\janitor\Cli::$cacheFile);
-        }
-        if (file_exists(\carono\janitor\Cli::$renamedFile)) {
-            FileHelper::unlink(\carono\janitor\Cli::$renamedFile);
-        }
+        \carono\janitor\Cli::getEngine()->clearCache();
         echo "Clearing\n";
     }
 
@@ -134,6 +132,16 @@ class JanitorCommand extends CLI
             $value = Console::prompt($description, ['default' => $value]);
             $this->setEnvOption($option, $value);
         }
+
+        foreach (JanitorCli::getEngine()->options as $option => $item) {
+            $default = JanitorCli::getEngine()->getOptionDefaultValue($option);
+            $description = JanitorCli::getEngine()->getOptionDescription($option);
+            $key = 'ENGINE_OPTION_' . $option;
+
+            $value = getenv($key) !== null ? getenv($key) : $default;
+            $value = Console::prompt($description, ['default' => $value]);
+            $this->setEnvOption($key, $value);
+        }
     }
 
     /**
@@ -142,7 +150,11 @@ class JanitorCommand extends CLI
     public function cmdResetEnv(Options $options)
     {
         if (Console::confirm('Reset env to default')) {
-            copy(static::$env . '.example', static::$env);
+            $env = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '.env';
+            if (!is_dir(dirname(static::getEnvFile()))) {
+                FileHelper::createDirectory(dirname(static::getEnvFile()));
+            }
+            copy($env . '.example', static::getEnvFile());
             Console::output('Env reverted to default');
             static::refreshEnv();
         }

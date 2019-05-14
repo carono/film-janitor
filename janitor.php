@@ -14,8 +14,6 @@ foreach ($autoload as $file) {
     }
 }
 
-unset($file);
-
 if (!defined('COMPOSER_INSTALL')) {
     fwrite(
         STDERR,

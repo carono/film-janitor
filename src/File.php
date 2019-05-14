@@ -2,6 +2,8 @@
 
 namespace carono\janitor;
 
+use carono\janitor\engines\EngineAbstract;
+use carono\janitor\engines\EngineInterface;
 use carono\janitor\helpers\ArrayHelper;
 
 /**
@@ -11,56 +13,18 @@ use carono\janitor\helpers\ArrayHelper;
  */
 class File
 {
-    public $filePath;
-    public $indexName = 0;
-    public $suffix;
-    public $reformedName;
-    public $customName;
-
     /**
-     * @return array
+     * @var string
      */
-    protected function getStoredSerials()
-    {
-        if (!file_exists(Cli::$cacheFile)) {
-            return [];
-        }
-        return json_decode(file_get_contents(Cli::$cacheFile), true) ?: [];
-    }
-
-    public function removeStoreSerialName()
-    {
-        $serials = $this->getStoredSerials();
-        unset($serials[$this->getParentFolder()]);
-        file_put_contents(Cli::$cacheFile, json_encode($serials));
-    }
-
+    protected $filePath;
     /**
-     * @return mixed
+     * @var array
      */
-    public function getStoredSerialName()
-    {
-        if ($this->isFilm()) {
-            return false;
-        }
-        if ($data = ArrayHelper::getValue($this->getStoredSerials(), $this->getParentFolder(), [])) {
-            return $data['title'] . ' ' . $this->formSuffix();
-        }
-        return false;
-    }
-
+    protected $movieNames = [];
     /**
-     * @param $title
+     * @var EngineAbstract
      */
-    public function storeSerialName()
-    {
-        $title = $this->reformedName;
-        if ($this->isSerial() && !$this->getStoredSerialName()) {
-            $serials = $this->getStoredSerials();
-            $serials[$this->getParentFolder()] = ['title' => $title, 'suffix' => $this->suffix];
-            file_put_contents(Cli::$cacheFile, json_encode($serials));
-        }
-    }
+    protected $engine;
 
     /**
      * @return string
@@ -71,19 +35,93 @@ class File
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getFolder()
     {
-        return pathinfo($this->filePath, PATHINFO_DIRNAME);
+        return (string)pathinfo($this->filePath, PATHINFO_DIRNAME);
+    }
+
+    /**
+     * @return string
+     */
+    public function getFileName()
+    {
+        return (string)pathinfo($this->filePath, PATHINFO_FILENAME);
+    }
+
+    /**
+     * @return string
+     */
+    public function getFilePath()
+    {
+        return $this->filePath;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFileExtension()
+    {
+        return (string)pathinfo($this->filePath, PATHINFO_EXTENSION);
+    }
+
+    /**
+     * @return array
+     */
+    protected function getStoredSerials()
+    {
+        return $this->getCacheValue('serial-names') ?: [];
     }
 
     /**
      * @return mixed
      */
-    public function getFileName()
+    public function getStoredSerialData()
     {
-        return pathinfo($this->filePath, PATHINFO_BASENAME);
+        if ($this->isFilm()) {
+            return [];
+        }
+        return ArrayHelper::getValue($this->getStoredSerials(), $this->getParentFolder(), []);
+    }
+
+    /**
+     *
+     */
+    public function restoreSerialData()
+    {
+        if ($data = $this->getStoredSerialData()) {
+            $this->movieNames = $data['movieNames'];
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    public function getStoredSerialName()
+    {
+        if ($data = $this->getStoredSerialData()) {
+            return $data['newName'];
+        }
+        return false;
+    }
+
+    /**
+     * @param $newName
+     */
+    public function storeSerialName($newName)
+    {
+        $title = $this->getReformFilmName($newName);
+        if ($this->isSerial() && !$this->getStoredSerialData()) {
+            $serials = $this->getStoredSerials();
+            $data = [
+                'title' => $title,
+                'newName' => $newName,
+                'movieNames' => $this->movieNames
+            ];
+            $serials[$this->getParentFolder()] = $data;
+            $this->setCacheValue('serial-names', $serials);
+        }
     }
 
     /**
@@ -91,7 +129,7 @@ class File
      */
     public function isFilm()
     {
-        return !$this->getEpisodeNumber() && !$this->getSeasonNumber();
+        return !$this->getSeasonNumber() && !$this->getEpisodeNumber();
     }
 
     /**
@@ -103,84 +141,51 @@ class File
     }
 
     /**
-     * @return bool
-     */
-    public function getYear()
-    {
-        return Cli::extractYear(Cli::clearName($this->filePath));
-    }
-
-    /**
      * @param null $request
-     * @return mixed|string
+     * @return string[]
      */
-    public function formFilmNames($request = null)
+    public function searchFilmNames($request = null)
     {
         $search = $request ?: $this->filePath;
-        return Cli::getRealFilmNames($search);
+        if (!isset($this->movieNames[$search])) {
+            $this->movieNames[$search] = $this->engine->getTitles($search, $this);
+        }
+        return $this->movieNames[$search];
+    }
+
+    /**
+     * @param $newName
+     * @return string
+     */
+    public function getReformFilePath($newName)
+    {
+        return $this->getFolder() . DIRECTORY_SEPARATOR . $this->getReformFileName($newName);
+    }
+
+    /**
+     * @param $newName
+     * @return string
+     */
+    public function getReformFileName($newName)
+    {
+        return $this->getReformFilmName($newName) . '.' . $this->getFileExtension();
+    }
+
+    /**
+     * @param $newName
+     * @return string
+     */
+    public function getReformFilmName($newName)
+    {
+        return $this->engine->reformFilmName($this, $newName);
     }
 
     /**
      * @return string
      */
-    public function formSuffix()
+    public function getSuffix()
     {
         return Cli::getEpisodeName($this->getSeasonNumber(), $this->getEpisodeNumber());
-    }
-
-    public function getRenamed()
-    {
-        if (!file_exists(Cli::$renamedFile)) {
-            return [];
-        }
-        return json_decode(file_get_contents(Cli::$renamedFile), true) ?: [];
-    }
-
-    public function wasRenamed()
-    {
-        $renamed = $this->getRenamed();
-        return in_array($this->filePath, $renamed);
-    }
-
-
-    /**
-     * @param null $request
-     * @return mixed|string
-     */
-    public function searchFilmName($request = null)
-    {
-        $name = ArrayHelper::getValue($this->formFilmNames($request), $this->indexName);
-        if (!$name) {
-            $this->reformedName = '';
-            $this->suffix = '';
-            return '';
-        }
-        if ($year = Cli::extractYear($this->filePath)) {
-            $name .= " ($year)";
-        }
-        $this->reformedName = $name;
-        if ($this->isSerial()) {
-            $this->suffix = $this->formSuffix();
-            $name .= ' ' . $this->suffix;
-        }
-        return $name;
-    }
-
-    /**
-     * @return string
-     */
-    public function getReformedFilePath()
-    {
-        $name = $this->getStoredSerialName() ?: $this->searchFilmName($this->customName);
-        return $this->getFolder() . DIRECTORY_SEPARATOR . $name . '.' . pathinfo($this->filePath, PATHINFO_EXTENSION);
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getReformedFileName()
-    {
-        return pathinfo($this->getReformedFilePath(), PATHINFO_BASENAME);
     }
 
     /**
@@ -188,25 +193,10 @@ class File
      */
     public function getEpisodeNumber()
     {
-        return Cli::getEpisodeNumberFromName($this->filePath);
-    }
-
-
-    public function storeRename()
-    {
-        if (!$this->wasRenamed()) {
-            $renamed = $this->getRenamed();
-            $renamed[] = $this->filePath;
-            file_put_contents(Cli::$renamedFile, json_encode($renamed));
+        if (!$episode = $this->engine->parseSerialEpisodeNumber($this->filePath)) {
+            return $this->getSeasonNumber() ? 1 : null;
         }
-    }
-
-    public function renameFile()
-    {
-        if (!rename($this->filePath, $newPath = $this->getReformedFilePath())) {
-            dir("Fail rename $this->filePath, to $newPath");
-        }
-        $this->storeRename();
+        return $episode;
     }
 
     /**
@@ -214,16 +204,61 @@ class File
      */
     public function getSeasonNumber()
     {
-        return Cli::getSeasonNumberFromName($this->filePath) ?: Cli::getSeasonNumberFromName($this->getFolder());
+        return $this->engine->parseSerialSeason($this->filePath) ?: $this->engine->parseSerialSeason($this->getFolder());
+    }
+
+    protected function setCacheValue($key, $data)
+    {
+        $class = $this->engine;
+        $class::setCacheValue($key, $data);
+    }
+
+    protected function getCacheValue($key)
+    {
+        $class = $this->engine;
+        return $class::getCacheValue($key);
+    }
+
+    /**
+     * @return bool
+     */
+    public function wasRenamed()
+    {
+        $key = 'store-file:' . md5($this->filePath);
+        return (bool)$this->getCacheValue($key);
+    }
+
+    public function storeRename()
+    {
+        $key = 'store-file:' . md5($this->filePath);
+        $this->setCacheValue($key, 1);
+    }
+
+    /**
+     * @param $newName
+     */
+    public function renameFile($newName)
+    {
+        if (!rename($this->filePath, $newPath = $this->getReformFilePath($newName))) {
+            dir("Fail rename $this->filePath, to $newPath");
+        }
+        $this->filePath = $newPath;
+        $this->storeRename();
+        $this->storeSerialName($newName);
     }
 
     /**
      * File constructor.
      *
      * @param $filePath
+     * @throws \Exception
      */
-    public function __construct($filePath)
+    public function __construct(EngineInterface $engine, $filePath)
     {
+        $this->engine = $engine;
         $this->filePath = $filePath;
+        if (!file_exists($filePath)) {
+            throw new \Exception("File $filePath not found");
+        }
     }
 }

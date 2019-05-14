@@ -66,6 +66,7 @@ class FileHelper
     /**
      * Copies a whole directory as another one.
      * The files and sub-directories will also be copied over.
+     *
      * @param string $src the source directory
      * @param string $dst the destination directory
      * @param array $options options for directory copy. Valid options are:
@@ -240,6 +241,7 @@ class FileHelper
 
     /**
      * Returns the files found under the specified directory and subdirectories.
+     *
      * @param string $dir the directory under which the files will be looked for.
      * @param array $options options for file searching. Valid options are:
      *
@@ -299,6 +301,7 @@ class FileHelper
 
     /**
      * Returns the directories found under the specified directory and subdirectories.
+     *
      * @param string $dir the directory under which the files will be looked for.
      * @param array $options options for directory searching. Valid options are:
      *
@@ -376,6 +379,7 @@ class FileHelper
 
     /**
      * Checks if the given file path satisfies the filtering options.
+     *
      * @param string $path the path of the file or directory to be checked
      * @param array $options the filtering options. See [[findFiles()]] for explanations of
      * the supported options.
@@ -412,6 +416,46 @@ class FileHelper
         }
 
         return true;
+    }
+
+
+    /**
+     * @param $name
+     * @return string
+     */
+    public static function prepareFileName($name)
+    {
+        $replaceWithLast = [
+            '720p',
+            '1080p',
+            'x264',
+            'NewStudio',
+            'Zuich32',
+            'LostFilm',
+            'WEBRip',
+            'WEB-DL',
+            'WEB',
+            'BDRip',
+            'HDRip',
+            '\bD\b',
+            '\bP\b',
+            '\bTS\b',
+            'Kuraj-Bambey',
+            '\bRUS\b',
+            'Jaskier'
+        ];
+        $replace = [
+            '.' => ' ',
+            '_' => ' '
+        ];
+        $name = pathinfo($name, PATHINFO_FILENAME);
+        $name = trim(strtr($name, $replace));
+        foreach ($replaceWithLast as $pattern) {
+            $name = preg_replace("/$pattern.+/ui", '', $name);
+        }
+        $name = preg_replace('/\ss\d+/i', ' ', $name);
+        $name = preg_replace('/e\d+/i', ' ', $name);
+        return trim($name);
     }
 
     /**
@@ -586,6 +630,7 @@ class FileHelper
 
     /**
      * Processes the pattern, stripping special characters like / and ! from the beginning and settings flags instead.
+     *
      * @param string $pattern
      * @param bool $caseSensitive
      * @throws InvalidArgumentException
@@ -633,6 +678,7 @@ class FileHelper
 
     /**
      * Searches for the first wildcard character in the pattern.
+     *
      * @param string $pattern the pattern to search in
      * @return int|bool position of first wildcard character or false if not found
      */

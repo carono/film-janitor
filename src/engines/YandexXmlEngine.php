@@ -3,6 +3,8 @@
 namespace carono\janitor\engines;
 
 use AntonShevchuk\YandexXml\YandexXmlClient;
+use carono\janitor\File;
+use carono\janitor\helpers\FileHelper;
 use Exception;
 use SimpleXMLElement;
 
@@ -19,7 +21,8 @@ class YandexXmlEngine extends EngineAbstract
      */
     protected static function formRequest($name)
     {
-        return urlencode($name . ' ' . getenv('XML_YANDEX_REQUEST'));
+        $name = str_replace('&', ' and ', $name);
+        return $name . ' ' . getenv('XML_YANDEX_REQUEST');
     }
 
     /**
@@ -35,13 +38,15 @@ class YandexXmlEngine extends EngineAbstract
         return $xml;
     }
 
+    /**
+     * @return YandexXmlClient
+     */
     public static function getClient()
     {
         $login = getenv('XML_YANDEX_LOGIN');
         $token = getenv('XML_YANDEX_TOKEN');
         return new YandexXmlClient($login, $token);
     }
-
 
     /**
      * @param $request
@@ -55,11 +60,11 @@ class YandexXmlEngine extends EngineAbstract
         $limit = getenv('XML_YANDEX_LIMIT') ?: 10;
 
         $client = self::getClient();
-        if (!$data = static::getCache($request)) {
+        if (!$data = static::getCacheValue($request)) {
             try {
                 $xml = $client->query($request)->lr($lr)->limit($limit)->request()->response;
                 sleep(2);
-                static::storeCache($request, $xml->saveXML());
+                static::setCacheValue($request, $xml->saveXML());
             } catch (\Exception $e) {
                 echo 'FAIL: ' . $e->getMessage();
                 exit;
@@ -70,15 +75,22 @@ class YandexXmlEngine extends EngineAbstract
         return $xml;
     }
 
-    public function getTitles($request)
+    /**
+     * @param string $request
+     * @param File $file
+     * @return array
+     */
+    public function getTitles($request, File $file)
     {
+        $request = FileHelper::prepareFileName($request);
         $xml = static::getXml($request);
         $titles = [];
         foreach ($xml->xpath('//results/grouping/group/doc/title') as $titleXml) {
-            $title = strip_tags($titleXml->asXML());
+            $title = html_entity_decode(strip_tags($titleXml->asXML()));
             $title = str_replace([':', '/', '\\'], [' - ', '', ''], $title);
             $title = preg_replace('/\s{2,}/', ' ', $title);
             $title = preg_replace('/—.+/ui', '', $title);
+            $title = preg_replace('/\|.+/ui', '', $title);
             $title = preg_replace('/Актеры.+/ui', '', $title);
             $title = preg_replace('/\(.+\)/', '', (string)$title);
             $title = preg_replace('/\s{2,}/', ' ', $title);
@@ -92,6 +104,9 @@ class YandexXmlEngine extends EngineAbstract
         return $titles;
     }
 
+    /**
+     * @return array
+     */
     public function getRequiredEnvironmentOptions()
     {
         return [

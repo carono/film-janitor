@@ -737,6 +737,14 @@ class Console
         }
     }
 
+    public static function selectBox($prompt, $items = [], $selected = [])
+    {
+        echo "\n" . $prompt . "\n\n";
+        foreach ($items as $i => $name) {
+            echo '[' . (in_array($i, (array)$selected) ? 'X' : ' ') . '] ' . $name . "\n";
+        }
+    }
+
     /**
      * Gives the user an option to choose from. Giving '?' as an input will show
      * a list of options to choose from and their explanations.
