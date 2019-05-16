@@ -28,6 +28,11 @@ class Cli
         return $message;
     }
 
+    protected static function out($text = '', $newLine = true)
+    {
+        echo $text . ($newLine ? "\n" : '');
+    }
+
     /**
      * @param $dir
      */
@@ -66,9 +71,9 @@ class Cli
             $selectedName = $file->getStoredSerialName();
 
             if (!$renameAll || !$file->getStoredSerialName()) {
-                Console::clearScreen();
                 $renameAll = false;
                 $names = $file->searchFilmNames($request);
+                Console::clearScreen();
 
                 if ($file->getStoredSerialName()) {
                     $file->restoreSerialData();
@@ -82,10 +87,13 @@ class Cli
                 $reformedFileName = $file->getReformFileName($selectedName);
 
                 Console::selectBox('Select correct title:', $names, $i);
-                echo "\n";
-                echo "Original file: {$file->getFileName()}\n";
-                echo "New file name: {$reformedFileName}\n\n";
-
+                self::out();
+                self::out("Original file: {$file->getFileName()}");
+                self::out("New file name: {$reformedFileName}");
+                if ($file->isSerial()) {
+                    self::out('Files in directory: ' . count(FileHelper::findFiles($file->getFolder())));
+                }
+                self::out();
                 $value = Console::select('What do?', $options);
 
             } else {
