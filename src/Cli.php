@@ -3,7 +3,6 @@
 namespace carono\janitor;
 
 use carono\janitor\engines\EngineAbstract;
-use carono\janitor\engines\EngineInterface;
 use carono\janitor\helpers\Console;
 use carono\janitor\helpers\FileHelper;
 

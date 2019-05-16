@@ -10,7 +10,7 @@ interface EngineInterface
 {
     /**
      * @param string $request
-     * @param $file
+     * @param File $file
      * @return array
      */
     public function getTitles($request, File $file);

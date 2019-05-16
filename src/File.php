@@ -25,6 +25,10 @@ class File
      * @var EngineAbstract
      */
     protected $engine;
+    /**
+     * @var string
+     */
+    protected $lastRequest;
 
     /**
      * @return string
@@ -150,6 +154,7 @@ class File
         if (!isset($this->movieNames[$search])) {
             $this->movieNames[$search] = $this->engine->getTitles($search, $this);
         }
+        $this->lastRequest = $request;
         return $this->movieNames[$search];
     }
 
@@ -177,7 +182,7 @@ class File
      */
     public function getReformFilmName($newName)
     {
-        return $this->engine->reformFilmName($this, $newName);
+        return $this->engine->reformFilmName($this, $newName, $this->lastRequest);
     }
 
     /**

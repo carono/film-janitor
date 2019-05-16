@@ -3,6 +3,7 @@
 namespace carono\janitor;
 
 use carono\janitor\Cli as JanitorCli;
+use carono\janitor\helpers\ArrayHelper;
 use carono\janitor\helpers\Console;
 use carono\janitor\helpers\FileHelper;
 use carono\janitor\helpers\Inflector;
@@ -20,7 +21,8 @@ class JanitorCommand extends CLI
 
     protected static function getEnvFile()
     {
-        return $_SERVER['APPDATA'] . DIRECTORY_SEPARATOR . 'film-janitor' . DIRECTORY_SEPARATOR . '.env';
+        $home = ArrayHelper::getValue($_SERVER, 'HOMEPATH', ArrayHelper::getValue($_SERVER, 'HOME'));
+        return $home . DIRECTORY_SEPARATOR . 'film-janitor' . DIRECTORY_SEPARATOR . '.env';
     }
 
     protected static function refreshEnv()
@@ -127,13 +129,14 @@ class JanitorCommand extends CLI
      */
     public function cmdSetEngineOptions(Options $options)
     {
+
         foreach (JanitorCli::getEngine()->getRequiredEnvironmentOptions() as $option => $description) {
             $value = getenv($option);
             $value = Console::prompt($description, ['default' => $value]);
             $this->setEnvOption($option, $value);
         }
 
-        foreach (JanitorCli::getEngine()->options as $option => $item) {
+        foreach (JanitorCli::getEngine()->getOptions() as $option => $item) {
             $default = JanitorCli::getEngine()->getOptionDefaultValue($option);
             $description = JanitorCli::getEngine()->getOptionDescription($option);
             $key = 'ENGINE_OPTION_' . $option;

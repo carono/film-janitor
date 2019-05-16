@@ -13,9 +13,13 @@ abstract class EngineAbstract implements EngineInterface
 {
     protected static $cacheClass = FilesystemAdapter::class;
     protected static $cache;
-    public $options = [
-        'ADD_YEAR' => 'Добавлять год к фильму:1'
-    ];
+
+    public function getOptions()
+    {
+        return [
+            'ADD_YEAR' => 'Add year to movie, like "movie (2019).avi":1'
+        ];
+    }
 
     /**
      * @return \Symfony\Component\Cache\Adapter\AbstractAdapter
@@ -37,8 +41,8 @@ abstract class EngineAbstract implements EngineInterface
      */
     public function getOptionDefaultValue($name)
     {
-        if (isset($this->options[$name])) {
-            return explode(':', $this->options[$name])[1];
+        if (isset($this->getOptions()[$name])) {
+            return explode(':', $this->getOptions()[$name])[1];
         }
         return null;
     }
@@ -49,8 +53,8 @@ abstract class EngineAbstract implements EngineInterface
      */
     public function getOptionDescription($name)
     {
-        if (isset($this->options[$name])) {
-            return explode(':', $this->options[$name])[0];
+        if (isset($this->getOptions()[$name])) {
+            return explode(':', $this->getOptions()[$name])[0];
         }
         return null;
     }
@@ -150,26 +154,26 @@ abstract class EngineAbstract implements EngineInterface
 
     /**
      * @param File $file
-     * @param $newName
+     * @param string $newName
+     * @param string $lastRequest
      * @return string
      */
-    public function reformFilmName(File $file, $newName)
+    public function reformFilmName(File $file, $newName, $lastRequest)
     {
         $name = $newName;
         if ($file->isSerial()) {
             $name .= ' ' . $file->getSuffix();
         }
+        if ($this->getOption('ADD_YEAR')) {
+            $years = [];
+            $years[] = Cli::extractYear($newName);
+            $years[] = Cli::extractYear($lastRequest);
+            $years[] = Cli::extractYear(FileHelper::prepareFileName($file->getFilePath()));
+            if ($year = current(array_filter($years))) {
+                $name .= " ($year)";
+            }
+        }
+
         return $name;
     }
-
-
-    /**
-     * @param File $file
-     * @return bool
-     */
-    public function getYear(File $file)
-    {
-        return Cli::extractYear(FileHelper::prepareFileName($file->getFilePath()));
-    }
-
 }
