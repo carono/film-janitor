@@ -5,3 +5,4 @@
 renamed.json
 cache.json
 .env
+tests/output
